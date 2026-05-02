@@ -57,8 +57,8 @@ public class CrateService {
     }
 
     public void delete(Long id) {
-        Crate c = get(id);
-        crates.delete(c);
+        int rows = crates.trash(id, currentUser.id());
+        if (rows == 0) throw new NotFoundException("crate " + id + " not found");
     }
 
     public Crate addTrack(Long crateId, Long trackId) {
@@ -73,5 +73,20 @@ public class CrateService {
         Track t = trackService.get(trackId);
         c.getTracks().remove(t);
         return c;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Crate> listTrashed() {
+        return crates.findTrashedByOwnerId(currentUser.id());
+    }
+
+    public void restore(Long id) {
+        int rows = crates.restore(id, currentUser.id());
+        if (rows == 0) throw new NotFoundException("crate " + id + " not found in trash");
+    }
+
+    public void purge(Long id) {
+        int rows = crates.purge(id, currentUser.id());
+        if (rows == 0) throw new NotFoundException("crate " + id + " not found");
     }
 }

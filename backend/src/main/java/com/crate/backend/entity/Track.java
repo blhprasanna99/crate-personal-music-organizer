@@ -3,13 +3,15 @@ package com.crate.backend.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "track", uniqueConstraints = @UniqueConstraint(columnNames = {"owner_id", "file_path"}))
+@Table(name = "track")
+@SQLRestriction("deleted_at is null")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -37,6 +39,9 @@ public class Track {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
+
+    @Column(name = "deleted_at")
+    private OffsetDateTime deletedAt;
 
     @ManyToMany
     @JoinTable(

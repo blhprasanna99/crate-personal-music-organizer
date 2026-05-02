@@ -53,7 +53,22 @@ public class TrackService {
     }
 
     public void delete(Long id) {
-        Track t = get(id);
-        tracks.delete(t);
+        int rows = tracks.trash(id, currentUser.id());
+        if (rows == 0) throw new NotFoundException("track " + id + " not found");
+    }
+
+    @Transactional(readOnly = true)
+    public List<Track> listTrashed() {
+        return tracks.findTrashedByOwnerId(currentUser.id());
+    }
+
+    public void restore(Long id) {
+        int rows = tracks.restore(id, currentUser.id());
+        if (rows == 0) throw new NotFoundException("track " + id + " not found in trash");
+    }
+
+    public void purge(Long id) {
+        int rows = tracks.purge(id, currentUser.id());
+        if (rows == 0) throw new NotFoundException("track " + id + " not found");
     }
 }

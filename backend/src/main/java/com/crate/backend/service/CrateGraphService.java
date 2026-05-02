@@ -61,14 +61,17 @@ public class CrateGraphService {
 
         List<Long> trackIds = jdbc.sql("""
                 with recursive descendants(id) as (
-                    select id from crate where id = ? and owner_id = ?
+                    select id from crate
+                    where id = ? and owner_id = ? and deleted_at is null
                     union
                     select cp.child_id
                     from crate_parent cp
                     join descendants d on cp.parent_id = d.id
+                    join crate c on c.id = cp.child_id and c.deleted_at is null
                 )
                 select distinct ct.track_id
                 from crate_track ct
+                join track t on t.id = ct.track_id and t.deleted_at is null
                 where ct.crate_id in (select id from descendants)
                 """)
                 .params(crateId, currentUser.id())

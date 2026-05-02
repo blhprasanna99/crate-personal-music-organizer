@@ -23,8 +23,11 @@ public class CrateController {
     private final CrateGraphService graph;
 
     @GetMapping
-    public List<CrateResponse> list() {
-        return crates.list().stream().map(CrateResponse::from).toList();
+    public List<CrateResponse> list(
+            @RequestParam(defaultValue = "false") boolean trashed
+    ) {
+        var list = trashed ? crates.listTrashed() : crates.list();
+        return list.stream().map(CrateResponse::from).toList();
     }
 
     @GetMapping("/{id}")
@@ -45,8 +48,21 @@ public class CrateController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        crates.delete(id);
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "trash") String mode
+    ) {
+        switch (mode) {
+            case "trash" -> crates.delete(id);
+            case "purge" -> crates.purge(id);
+            default -> throw new IllegalArgumentException("mode must be 'trash' or 'purge'");
+        }
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<Void> restore(@PathVariable Long id) {
+        crates.restore(id);
         return ResponseEntity.noContent().build();
     }
 
