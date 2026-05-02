@@ -1,5 +1,6 @@
 package com.crate.backend.web;
 
+import com.crate.backend.service.CrateGraphService;
 import com.crate.backend.service.CrateService;
 import com.crate.backend.web.dto.CrateCreateRequest;
 import com.crate.backend.web.dto.CrateResponse;
@@ -19,6 +20,7 @@ import java.util.List;
 public class CrateController {
 
     private final CrateService crates;
+    private final CrateGraphService graph;
 
     @GetMapping
     public List<CrateResponse> list() {
@@ -49,8 +51,12 @@ public class CrateController {
     }
 
     @GetMapping("/{id}/tracks")
-    public List<TrackResponse> tracks(@PathVariable Long id) {
-        return crates.tracksIn(id).stream().map(TrackResponse::from).toList();
+    public List<TrackResponse> tracks(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean recursive
+    ) {
+        var tracks = recursive ? graph.effectiveTracks(id) : crates.tracksIn(id);
+        return tracks.stream().map(TrackResponse::from).toList();
     }
 
     @PutMapping("/{crateId}/tracks/{trackId}")
@@ -62,6 +68,18 @@ public class CrateController {
     @DeleteMapping("/{crateId}/tracks/{trackId}")
     public ResponseEntity<Void> removeTrack(@PathVariable Long crateId, @PathVariable Long trackId) {
         crates.removeTrack(crateId, trackId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{childId}/parents/{parentId}")
+    public ResponseEntity<Void> addParent(@PathVariable Long childId, @PathVariable Long parentId) {
+        graph.addParent(childId, parentId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{childId}/parents/{parentId}")
+    public ResponseEntity<Void> removeParent(@PathVariable Long childId, @PathVariable Long parentId) {
+        graph.removeParent(childId, parentId);
         return ResponseEntity.noContent().build();
     }
 }
