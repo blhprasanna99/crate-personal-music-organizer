@@ -1,10 +1,12 @@
 package com.crate.backend.web;
 
+import com.crate.backend.service.FilterEngine;
 import com.crate.backend.service.FolderImportService;
 import com.crate.backend.service.TagService;
 import com.crate.backend.service.TrackService;
 import com.crate.backend.web.dto.ImportRequest;
 import com.crate.backend.web.dto.ImportSummary;
+import com.crate.backend.web.dto.SearchRequest;
 import com.crate.backend.web.dto.TagResponse;
 import com.crate.backend.web.dto.TrackCreateRequest;
 import com.crate.backend.web.dto.TrackResponse;
@@ -26,6 +28,7 @@ public class TrackController {
     private final TrackService tracks;
     private final FolderImportService folderImport;
     private final TagService tagService;
+    private final FilterEngine filterEngine;
 
     @GetMapping
     public List<TrackResponse> list(
@@ -74,6 +77,11 @@ public class TrackController {
     @PostMapping("/import")
     public ImportSummary importFolder(@Valid @RequestBody ImportRequest req) throws IOException {
         return folderImport.importFolder(req.folderPath());
+    }
+
+    @PostMapping("/search")
+    public List<TrackResponse> search(@Valid @RequestBody SearchRequest req) {
+        return filterEngine.resolve(req.criteria()).stream().map(TrackResponse::from).toList();
     }
 
     @GetMapping("/{trackId}/tags")
