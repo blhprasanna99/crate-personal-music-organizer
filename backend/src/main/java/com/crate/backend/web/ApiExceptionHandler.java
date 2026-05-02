@@ -29,4 +29,9 @@ public class ApiExceptionHandler {
         String message = first.map(f -> f.getField() + ": " + f.getDefaultMessage()).orElse("invalid request");
         return ResponseEntity.badRequest().body(Map.of("error", message));
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> badArg(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+    }
 }
